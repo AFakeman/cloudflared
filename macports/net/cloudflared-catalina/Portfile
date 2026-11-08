@@ -8,7 +8,7 @@ PortGroup           golang 1.0
 go.setup            github.com/AFakeman/cloudflared f22d237ae55cdfd02ab8302c6262037828521311
 name                cloudflared-catalina
 version             0.1.0
-revision            0
+revision            1
 categories          net security
 platforms           {darwin >= 19}
 supported_archs     x86_64 arm64
@@ -57,7 +57,7 @@ startupitem.autostart   no
 startupitem.executable  ${prefix}/bin/cloudflared --no-autoupdate \
                         --config ${prefix}/etc/cloudflared/config.yml tunnel run
 startupitem.logfile     ${prefix}/var/log/cloudflared/cloudflared.log
-startupitem.logfile.err ${prefix}/var/log/cloudflared/cloudflared.err.log
+startupitem.logfile.stderr ${prefix}/var/log/cloudflared/cloudflared.err.log
 
 livecheck.type      none
 
