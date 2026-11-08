@@ -1,0 +1,72 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+
+PortSystem          1.0
+PortGroup           golang 1.0
+
+# Snapshot of AFakeman/cloudflared's catalina-compat branch. Pin the commit:
+# fetching a moving branch would invalidate checksums and hide upgrades.
+go.setup            github.com/AFakeman/cloudflared f22d237ae55cdfd02ab8302c6262037828521311
+name                cloudflared-catalina
+version             0.1.0
+revision            0
+categories          net security
+platforms           {darwin >= 19}
+supported_archs     x86_64 arm64
+license             Apache-2
+maintainers         nomaintainer
+conflicts           cloudflared
+
+homepage            https://github.com/AFakeman/cloudflared/tree/catalina-compat
+description         Cloudflare Tunnel client with macOS Catalina compatibility
+long_description    ${description}, built from the catalina-compat branch \
+                    using the MacPorts Go 1.24 toolchain.
+
+checksums           rmd160  c07bed341c07ba4e9a04225dc6d7ef670c84805d \
+                    sha256  847e3875baccdf5bd89b0c8b0972d9fbd80ffecc881717fe6f4d52008f6ab477 \
+                    size    662911
+
+# Keep the canonical module path even though the sources come from a fork.
+go.package          github.com/cloudflare/cloudflared
+go.offline_build    no
+go.bin              ${prefix}/lib/go-1.24/bin/go
+depends_build       port:go-1.24
+
+# Use only the installed toolchain; never download a newer, Catalina-incompatible
+# Go. readonly keeps the checked-in module graph unchanged during compilation.
+build.env-append    GOTOOLCHAIN=local GOFIPS140=off
+build.args-append   -mod=readonly -trimpath \
+                    -o cloudflared \
+                    -ldflags \"-X main.Version=catalina-f22d237ae55c \
+                    -X ${go.package}/config.DefaultUnixConfigLocation=${prefix}/etc/cloudflared \
+                    -X ${go.package}/config.DefaultUnixLogLocation=${prefix}/var/log/cloudflared \
+                    -X ${go.package}/cmd/cloudflared/updater.BuiltForPackageManager=MacPorts\"
+build.post_args-append ./cmd/cloudflared
+
+destroot {
+    xinstall -m 0755 ${worksrcpath}/cloudflared ${destroot}${prefix}/bin/
+    xinstall -d ${destroot}${prefix}/etc/cloudflared
+    xinstall -d ${destroot}${prefix}/var/log/cloudflared
+    destroot.keepdirs ${destroot}${prefix}/etc/cloudflared \
+                      ${destroot}${prefix}/var/log/cloudflared
+}
+
+# MacPorts creates org.macports.cloudflared-catalina. Do not load the service
+# until the administrator has supplied config.yml and tunnel credentials.
+startupitem.create      yes
+startupitem.autostart   no
+startupitem.executable  ${prefix}/bin/cloudflared --no-autoupdate \
+                        --config ${prefix}/etc/cloudflared/config.yml tunnel run
+startupitem.logfile     ${prefix}/var/log/cloudflared/cloudflared.log
+startupitem.logfile.err ${prefix}/var/log/cloudflared/cloudflared.err.log
+
+livecheck.type      none
+
+notes "
+    Configure ${prefix}/etc/cloudflared/config.yml and install tunnel credentials
+    before loading the service. See macports/README.md in the source repository.
+
+    Start and enable at boot: sudo port load cloudflared-catalina
+    Stop and disable:        sudo port unload cloudflared-catalina
+
+    This port requires go-1.24 >= 1.24.13 (the minimum in go.mod).
+"
