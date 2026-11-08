@@ -247,13 +247,13 @@ func TestShouldGetNewAddressCountsWrappedQUICDialTimeout(t *testing.T) {
 
 	needsNewAddress, err := fallback.ShouldGetNewAddress(0, dialErr)
 	require.True(t, needsNewAddress)
-	connectivityErr, ok := errors.AsType[*ConnectivityError](err)
+	connectivityErr, ok := errorsAsType[*ConnectivityError](err)
 	require.True(t, ok)
 	assert.False(t, connectivityErr.HasReachedMaxRetries())
 
 	needsNewAddress, err = fallback.ShouldGetNewAddress(0, dialErr)
 	require.True(t, needsNewAddress)
-	connectivityErr, ok = errors.AsType[*ConnectivityError](err)
+	connectivityErr, ok = errorsAsType[*ConnectivityError](err)
 	require.True(t, ok)
 	assert.True(t, connectivityErr.HasReachedMaxRetries())
 }

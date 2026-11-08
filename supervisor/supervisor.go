@@ -258,13 +258,13 @@ func (s *Supervisor) startFirstTunnel(
 		if strings.Contains(err.Error(), "Unauthorized") {
 			continue
 		}
-		if registrationErr, ok := errors.AsType[connection.ServerRegisterTunnelError](err); ok {
+		if registrationErr, ok := errorsAsType[connection.ServerRegisterTunnelError](err); ok {
 			if registrationErr.Permanent {
 				return
 			}
 			continue
 		}
-		if _, ok := errors.AsType[edgediscovery.ErrNoAddressesLeft](err); ok {
+		if _, ok := errorsAsType[edgediscovery.ErrNoAddressesLeft](err); ok {
 			// If your provided addresses are not available, we will keep trying regardless.
 			if !isStaticEdge {
 				return
@@ -284,25 +284,25 @@ func isRetryableStartupError(err error) bool {
 	if errors.Is(err, connection.ErrDuplicateConnection) {
 		return true
 	}
-	if _, ok := errors.AsType[*quic.IdleTimeoutError](err); ok {
+	if _, ok := errorsAsType[*quic.IdleTimeoutError](err); ok {
 		return true
 	}
-	if _, ok := errors.AsType[*quic.ApplicationError](err); ok {
+	if _, ok := errorsAsType[*quic.ApplicationError](err); ok {
 		return true
 	}
-	if _, ok := errors.AsType[edgediscovery.DialError](err); ok {
+	if _, ok := errorsAsType[edgediscovery.DialError](err); ok {
 		return true
 	}
-	if _, ok := errors.AsType[*connection.EdgeQuicDialError](err); ok {
+	if _, ok := errorsAsType[*connection.EdgeQuicDialError](err); ok {
 		return true
 	}
-	if _, ok := errors.AsType[*connection.ControlStreamError](err); ok {
+	if _, ok := errorsAsType[*connection.ControlStreamError](err); ok {
 		return true
 	}
-	if _, ok := errors.AsType[*connection.StreamListenerError](err); ok {
+	if _, ok := errorsAsType[*connection.StreamListenerError](err); ok {
 		return true
 	}
-	if _, ok := errors.AsType[*connection.DatagramManagerError](err); ok {
+	if _, ok := errorsAsType[*connection.DatagramManagerError](err); ok {
 		return true
 	}
 	return false

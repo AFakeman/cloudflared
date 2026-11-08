@@ -344,12 +344,14 @@ func suggestProtocol(quicResults, http2Results []CheckResult, overrideFlag strin
 			// all fail — if they did, fall through to the heuristic so the
 			// summary can report a usable fallback or nil.
 			if len(quicResults) > 0 && worstStatus(quicResults) != Fail {
-				return new(connection.QUIC)
+				protocol := connection.QUIC
+				return &protocol
 			}
 		case connection.HTTP2:
 			// Same logic for an explicit HTTP/2 override.
 			if len(http2Results) > 0 && worstStatus(http2Results) != Fail {
-				return new(connection.HTTP2)
+				protocol := connection.HTTP2
+				return &protocol
 			}
 		}
 	}

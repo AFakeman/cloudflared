@@ -23,7 +23,7 @@ var fixedRunID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 func allPassReport() Report {
 	return Report{
 		RunID:             fixedRunID,
-		SuggestedProtocol: new(connection.QUIC),
+		SuggestedProtocol: protocolPointer(connection.QUIC),
 		Results: []CheckResult{
 			{Type: ProbeTypeDNS, Component: "DNS Resolution", Target: "region1.v2.argotunnel.com", ProbeStatus: Pass, Details: dnsResolvedSuccessfully},
 			{Type: ProbeTypeDNS, Component: "DNS Resolution", Target: "region2.v2.argotunnel.com", ProbeStatus: Pass, Details: dnsResolvedSuccessfully},
@@ -39,7 +39,7 @@ func allPassReport() Report {
 func quicBlockedReport() Report {
 	return Report{
 		RunID:             fixedRunID,
-		SuggestedProtocol: new(connection.HTTP2),
+		SuggestedProtocol: protocolPointer(connection.HTTP2),
 		Results: []CheckResult{
 			{Type: ProbeTypeDNS, Component: "DNS Resolution", Target: "region1.v2.argotunnel.com", ProbeStatus: Pass, Details: dnsResolvedSuccessfully},
 			{Type: ProbeTypeDNS, Component: "DNS Resolution", Target: "region2.v2.argotunnel.com", ProbeStatus: Pass, Details: dnsResolvedSuccessfully},
@@ -62,7 +62,7 @@ func quicBlockedReport() Report {
 func apiFailReport() Report {
 	return Report{
 		RunID:             fixedRunID,
-		SuggestedProtocol: new(connection.QUIC),
+		SuggestedProtocol: protocolPointer(connection.QUIC),
 		Results: []CheckResult{
 			{Type: ProbeTypeDNS, Component: "DNS Resolution", Target: "region1.v2.argotunnel.com", ProbeStatus: Pass, Details: dnsResolvedSuccessfully},
 			{Type: ProbeTypeDNS, Component: "DNS Resolution", Target: "region2.v2.argotunnel.com", ProbeStatus: Pass, Details: dnsResolvedSuccessfully},
@@ -213,7 +213,7 @@ func TestString_DNSFail(t *testing.T) {
 
 func TestString_EmptyResults(t *testing.T) {
 	t.Parallel()
-	r := Report{RunID: fixedRunID, SuggestedProtocol: new(connection.QUIC)}
+	r := Report{RunID: fixedRunID, SuggestedProtocol: protocolPointer(connection.QUIC)}
 	out := r.String()
 	// Must not panic and must still emit a valid skeleton.
 	require.Len(t, out, 3)
@@ -383,7 +383,7 @@ func TestLogEvent_DNSFail(t *testing.T) {
 
 func TestLogEvent_EmptyReport(t *testing.T) {
 	t.Parallel()
-	r := Report{RunID: fixedRunID, SuggestedProtocol: new(connection.HTTP2)}
+	r := Report{RunID: fixedRunID, SuggestedProtocol: protocolPointer(connection.HTTP2)}
 	entries := captureLogLines(t, r)
 
 	// No result lines, only the summary.

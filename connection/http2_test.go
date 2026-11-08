@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/http2"
 
 	"github.com/cloudflare/cloudflared/client"
 	"github.com/cloudflare/cloudflared/tracing"
@@ -26,16 +27,9 @@ import (
 	"github.com/cloudflare/cloudflared/tunnelrpc/pogs"
 )
 
-func newTestHTTP2ClientConn(ctx context.Context, conn net.Conn) (*http.ClientConn, error) {
-	protocols := new(http.Protocols)
-	protocols.SetUnencryptedHTTP2(true)
-	transport := &http.Transport{
-		DialContext: func(context.Context, string, string) (net.Conn, error) {
-			return conn, nil
-		},
-		Protocols: protocols,
-	}
-	return transport.NewClientConn(ctx, "http", "localhost:8080")
+func newTestHTTP2ClientConn(_ context.Context, conn net.Conn) (*http2.ClientConn, error) {
+	transport := &http2.Transport{AllowHTTP: true}
+	return transport.NewClientConn(conn)
 }
 
 func newTestHTTP2Connection() (*HTTP2Connection, net.Conn) {

@@ -164,7 +164,7 @@ func (f *IpAddrFallback) ShouldGetNewAddress(connIndex uint8, err error) (needsN
 		return false, nil
 	}
 
-	// errors.AsType is used so wrapped connection errors (e.g. a dup-conn returned by
+	// errorsAsType is used so wrapped connection errors (e.g. a dup-conn returned by
 	// the QUIC control stream is wrapped in a ControlStreamError) are still classified
 	// by their underlying cause.
 	if errors.Is(err, connection.ErrDuplicateConnection) {
@@ -174,8 +174,8 @@ func (f *IpAddrFallback) ShouldGetNewAddress(connIndex uint8, err error) (needsN
 	// Network problems should be retried with new address immediately and report
 	// as connectivity errors. Check the outer dial errors before their causes so
 	// an EdgeQuicDialError wrapping an idle timeout still advances protocol fallback.
-	_, isDialErr := errors.AsType[edgediscovery.DialError](err)
-	_, isQuicDialErr := errors.AsType[*connection.EdgeQuicDialError](err)
+	_, isDialErr := errorsAsType[edgediscovery.DialError](err)
+	_, isQuicDialErr := errorsAsType[*connection.EdgeQuicDialError](err)
 	if isDialErr || isQuicDialErr {
 		if f.retriesByConnIndex[connIndex] >= f.maxRetries {
 			f.retriesByConnIndex[connIndex] = 0
@@ -186,7 +186,7 @@ func (f *IpAddrFallback) ShouldGetNewAddress(connIndex uint8, err error) (needsN
 	}
 
 	// Try the next address for an idle timeout that did not occur while dialing.
-	if _, ok := errors.AsType[*quic.IdleTimeoutError](err); ok {
+	if _, ok := errorsAsType[*quic.IdleTimeoutError](err); ok {
 		return true, nil
 	}
 
@@ -380,11 +380,11 @@ func selectNextProtocol(
 }
 
 func isQuicBroken(cause error) bool {
-	if _, ok := errors.AsType[*quic.IdleTimeoutError](cause); ok {
+	if _, ok := errorsAsType[*quic.IdleTimeoutError](cause); ok {
 		return true
 	}
 
-	if _, ok := errors.AsType[*quic.TransportError](cause); ok && strings.Contains(cause.Error(), "operation not permitted") {
+	if _, ok := errorsAsType[*quic.TransportError](cause); ok && strings.Contains(cause.Error(), "operation not permitted") {
 		return true
 	}
 
@@ -437,13 +437,13 @@ func (e *EdgeTunnelServer) serveTunnel(
 			// don't retry this connection anymore, let supervisor pick a new address
 			return err, false
 		}
-		if serverRegErr, ok := errors.AsType[connection.ServerRegisterTunnelError](err); ok {
+		if serverRegErr, ok := errorsAsType[connection.ServerRegisterTunnelError](err); ok {
 			connLog.ConnAwareLogger().Err(serverRegErr).Msg("Register tunnel error from server side")
 			// Don't send registration error return from server to Sentry. They are
 			// logged on server side
 			return err, !serverRegErr.Permanent
 		}
-		if _, ok := errors.AsType[*connection.EdgeQuicDialError](err); ok {
+		if _, ok := errorsAsType[*connection.EdgeQuicDialError](err); ok {
 			return err, false
 		}
 		if errors.Is(err, context.Canceled) {
@@ -451,7 +451,7 @@ func (e *EdgeTunnelServer) serveTunnel(
 			return err, false
 		}
 		connLog.ConnAwareLogger().Err(err).Msgf("Serve tunnel error")
-		_, permanent := errors.AsType[unrecoverableError](err)
+		_, permanent := errorsAsType[unrecoverableError](err)
 		return err, !permanent
 	}
 	return nil, false

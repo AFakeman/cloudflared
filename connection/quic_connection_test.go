@@ -422,7 +422,8 @@ func TestQUICConnectionOpenControlStreamError(t *testing.T) {
 			err := quicConn.Serve(ctx)
 
 			require.ErrorIs(t, err, tc.target)
-			_, isControlError := errors.AsType[*ControlStreamError](err)
+			var controlError *ControlStreamError
+			isControlError := errors.As(err, &controlError)
 			assert.Equal(t, tc.wantControlError, isControlError)
 		})
 	}

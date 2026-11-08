@@ -109,6 +109,10 @@ func validateUrlString(originUrl string) (string, error) {
 	var hostname string
 	hasScheme := parsedUrl.IsAbs() && parsedUrl.Host != ""
 	if hasScheme {
+		// Older net/url versions accept extra colons in unbracketed hosts.
+		if strings.Contains(parsedUrl.Hostname(), ":") && !strings.HasPrefix(parsedUrl.Host, "[") {
+			return "", fmt.Errorf("URL %s has invalid format", originUrl)
+		}
 		err := validateScheme(parsedUrl.Scheme)
 		if err != nil {
 			return "", err
